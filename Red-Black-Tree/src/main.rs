@@ -6,19 +6,19 @@ enum NodeColor {
     Black, 
 }
 
-type TreeRoot = Option<Rc<RefCell<TreeNode<T>>>>
+type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 struct TreeNode<T> {
     pub color: NodeColor,
     pub key: T,
-    pub parent: TreeRoot, 
-    left: TreeRoot, 
-    right: TreeRoot
+    pub parent: TreeRoot<T>, 
+    left: TreeRoot<T>, 
+    right: TreeRoot<T>
 }
 struct RedBlackTree<T>{
-    root: TreeRoot
+    root: TreeRoot<T>
 }
 
-impl<T> RedBlackTree<T>{
+/*impl<T> RedBlackTree<T>{
     pub fn insert(&mut self, value: T){}
     pub fn delete(&mut self, value: T)->Option<T>{}
     pub fn count_leaves(&self)->u32{}
@@ -26,12 +26,13 @@ impl<T> RedBlackTree<T>{
     pub fn in_order_traverse(&self){}
     pub fn is_empty(&self)->bool{}
     pub fn print(&self)->String{}
-}
+}*/
 
-impl<T: std::cmp::PartialOrd> TreeNode <T>{
+impl<T: std::cmp::PartialOrd+std::marker::Copy> TreeNode <T>{
     pub fn insert(&mut self, value: T){}
     pub fn delete(&mut self, value: T)->Option<T>{
     }
+
 }
 fn main() {
     println!("Hello, world!");
