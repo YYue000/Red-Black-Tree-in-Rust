@@ -28,12 +28,19 @@ struct RedBlackTree<T>{
     pub fn print(&self)->String{}
 }*/
 
-impl<T: std::cmp::PartialOrd+std::marker::Copy> TreeNode <T>{
-    pub fn insert(&mut self, value: T){}
-    pub fn delete(&mut self, value: T)->Option<T>{
-    }
+// impl<T: std::cmp::PartialOrd+std::marker::Copy> TreeNode <T>{
+//     pub fn insert(&mut self, value: T){}
+//     pub fn delete(&mut self, value: T)->Option<T>{
+//     }
 
-}
+use Red_Black_Tree::Avl_tree::*;
+
 fn main() {
+    let mut test = AvlNode {
+        value: 4,
+        left: None,
+        right: None,
+    };
+
     println!("Hello, world!");
 }
