@@ -131,19 +131,5 @@ impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> TreeNode <T>{
 }
 
 fn main() {
-    let nd:TreeNode<i32> = TreeNode{color: NodeColor::Black,
-    value: 5, parent: None, left: None, right: None};
-    let left: TreeNode<i32> = TreeNode{color: NodeColor::Black,
-    value:2, parent: Some(Rc::new(RefCell::new(nd))), left: None, right:None};
-    let right: TreeNode<i32> = TreeNode{color: NodeColor::Black,
-    value:12, parent: left.parent.clone(), left: None, right:None};
-    
-    let mut tree: RedBlackTree<i32> = RedBlackTree{root: left.parent.clone()};
-    let _nd = tree.root.clone().unwrap();
-    _nd.borrow_mut().left = Some(Rc::new(RefCell::new(left)));
-    _nd.borrow_mut().right = Some(Rc::new(RefCell::new(right)));
-
-    println!("{:?}",_nd.borrow_mut().value);
-    let d = tree.delete(5);
-    println!("{:?} {:?}",tree.root.unwrap().borrow_mut().value, d);
+    println!("Hello, world!");
 }
