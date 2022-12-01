@@ -15,7 +15,7 @@ type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 struct TreeNode<T> {
     pub color: NodeColor,
     pub value: T,
-    pub parent: TreeRoot<T>, 
+    pub parent: TreeRoot<T>,
     left: TreeRoot<T>, 
     right: TreeRoot<T>
 }
@@ -30,6 +30,12 @@ impl Direction{
             Direction::Right=>Direction::Left
         }
     }
+    fn is_left(&self)->bool{
+        match self{
+            Direction::Left=>true,
+            Direction::Right=>false
+        }
+    }
 }
 
 
@@ -37,10 +43,7 @@ impl Direction{
 impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> RedBlackTree<T>{
     pub fn insert(&mut self, value: T){}
     pub fn delete(&mut self, value: T)->Option<T>{
-        if self.root.is_none(){
-            return None;
-        }
-        let (deleted, new_root) = self.root.clone().unwrap().borrow_mut().delete(value);
+        let (deleted, new_root) = delete_node(self.root.clone(), value);
         if new_root.is_some(){
             self.root = new_root.unwrap().clone();
         }
@@ -50,42 +53,22 @@ impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> RedBlackTree<T>
     pub fn count_leaves(&self)->u32{}
     pub fn height(&self)->u32{}
     pub fn in_order_traverse(&self){}
-    pub fn is_empty(&self)->bool{}
-    pub fn print(&self)->String{}*/
-    pub fn rotate(parent: &TreeRoot<T>, child: &TreeRoot<T>, node_direction: &Direction){
-        let p = parent.clone().unwrap();
-        let mut p = p.borrow_mut();
-        let c = child.clone().unwrap();
-        let mut c = c.borrow_mut();
-
-        let grad = p.parent.clone();
-        p.parent = child.clone();
-        c.parent = grad;
-        match node_direction{
-            Direction::Left=>{
-                //rotate right
-                p.left = c.right.clone();
-                c.right = parent.clone();
-
-            },
-            Direction::Right=>{
-                //rotate left
-                p.right = c.left.clone();
-                c.left = parent.clone();
-            },
+    pub fn is_empty(&self)->bool{}*/
+    fn print(&self) {
+        if self.root.is_none() {
+            println!("Empty tree!");
+            return;
         }
+        self.root.clone().unwrap().borrow().print_tree("  ".to_string());
+    }
+
+    pub fn rotate(parent: &TreeRoot<T>, child: &TreeRoot<T>, node_direction: &Direction){
     }
 
 }
 
 impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> TreeNode <T>{
 //impl<T: std::cmp::PartialOrd+std::marker::Copy> TreeNode <T>{
-    pub fn insert(&mut self, value: T){}
-    pub fn delete(&mut self, value: T)->(Option<T>, Option<TreeRoot<T>>){
-        self.set_node_delete();
-        //None
-       (Some(self.value),None) 
-    }
 
     fn get_min(&self)->T{
         match &self.left{
@@ -96,12 +79,6 @@ impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> TreeNode <T>{
         }
     }
 
-
-    fn set_node_delete(&mut self){
-        self.parent = None;
-        self.left = None;
-        self.right = None;
-    }
 
     fn get_direction_to_parent(&self)->Direction{
         assert!(self.parent.is_some());
@@ -128,8 +105,43 @@ impl<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug> TreeNode <T>{
         }
     }
 
+    fn is_leave(&self)->bool{
+        self.left.is_none() && self.right.is_none()
+    }
+
+    fn print_tree(&self, ident: String) {
+
+        println!(
+            "(Color: {:?}, Value: {:?}, Is Leave: {:?})",
+            self.color,
+            self.value,
+            self.is_leave(),
+        );
+
+        if self.left.is_some() {
+            print!("{}left: ", ident);
+            self.left.clone().unwrap().borrow().print_tree(ident.clone() + "  ");
+        }
+
+        if self.right.is_some() {
+            print!("{}right: ", ident);
+            self.right.clone().unwrap().borrow().print_tree(ident.clone() + "  ");
+        }
+    }
+
+
 }
+fn delete_node<T: std::cmp::PartialOrd+std::marker::Copy+ std::fmt::Debug>(root: TreeRoot<T>, value: T)->(Option<T>, Option<TreeRoot<T>>){
+    if root.is_none(){
+        return (None, None);
+    }
+
+    let node = root.clone().unwrap();
+
+
+   return (Some(node.borrow().value),None);
+    }
+
 
 fn main() {
-    println!("Hello, world!");
 }
