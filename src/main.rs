@@ -162,12 +162,12 @@ impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
     fn replace_current_with_unique_child_delete_helper(&mut self, child: &TreeRoot<T>)->Option<TreeRoot<T>>{
         // deal nodes with 1 or 0 child
         assert!(!(self.left.is_some()&&self.right.is_some()));
-        let direction = self.get_direction_to_parent();
         if child.is_some(){
             child.clone().unwrap().borrow_mut().parent = self.parent.clone();
         }
         let ret = match self.parent.clone(){
             Some(parent)=>{
+                let direction = self.get_direction_to_parent();
                 match direction{
                     Direction::Left=>parent.borrow_mut().left = self.left.clone(),
                     Direction::Right=>parent.borrow_mut().right = self.right.clone()
