@@ -27,12 +27,21 @@ impl Direction{
 
 
 
-pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
+pub trait SimpleTreeTrait<T: Ord+Copy+Debug+Display>{
 
+    fn insert(&mut self, value: T)->bool{true}
+    fn delete(&mut self, value: T)->Option<T>{None}
+    fn count_leaves(&self)->u32{0}
+    fn is_empty(&self)->bool{true}
+    fn print(&self, verbose: bool){}
+    fn height(&self)->u32{0}
+    fn in_order_traverse(&self)->Vec<T>{Vec::<T>::new()}
+}
+
+
+pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: SimpleTreeTrait<T>{
+    
     fn root(&self)->Option<Rc<RefCell<TreeNode>>>;
-
-    fn insert(&mut self, value: T)->bool;
-    fn delete(&mut self, value: T)->Option<T>;
 
     fn count_leaves(&self)->u32{
         if self.root().is_some(){
@@ -245,4 +254,28 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
     }
 }
 
+pub struct SimpleTreeNode<T>{
+    pub value: T,
+    pub parent: Option<Rc<RefCell<SimpleTreeNode<T>>>>,
+    left: Option<Rc<RefCell<SimpleTreeNode<T>>>>, 
+    right: Option<Rc<RefCell<SimpleTreeNode<T>>>>
+}
 
+impl<T:Ord+Copy+Debug+Display> TreeNodeTrait<T> for SimpleTreeNode<T>{
+    fn left(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
+    fn right(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
+    fn parent(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
+    fn value(&self)->T{
+        self.value
+    }
+    fn structure_info(&self)->String{
+        "hello".to_string()
+    }
+    fn fmt_info(&self)->String{
+        "hello".to_string()
+    }
+}
+
+pub trait Wrapper{
+    fn func(&self){}
+}

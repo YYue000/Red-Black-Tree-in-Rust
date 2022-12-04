@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::fmt::{Debug, Display};
 
-pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction};
+pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum NodeColor {
@@ -12,14 +12,14 @@ pub enum NodeColor {
 
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct TreeNode<T: Ord+Copy+Debug+Display> {
+struct TreeNode<T: Ord+Copy+Debug+Display> {
     pub color: NodeColor,
     pub value: T,
     pub parent: TreeRoot<T>,
     left: TreeRoot<T>, 
     right: TreeRoot<T>
 }
-pub type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
+type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 pub struct RedBlackTree<T: Ord+Copy+Debug+Display>{
     root: TreeRoot<T>
 }
@@ -28,18 +28,6 @@ pub struct RedBlackTree<T: Ord+Copy+Debug+Display>{
 impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
     fn root(&self)->TreeRoot<T>{
         self.root.clone()
-    }
-
-    fn delete(&mut self, value: T)->Option<T>{
-        let (deleted, new_root) = delete_node(self.root.clone(), value);
-        if new_root.is_some(){
-            self.root = new_root.unwrap().clone();
-        }
-        return deleted;
-    }
-
-    fn insert(&mut self, value:T)->bool{
-        true
     }
 
     fn check_valid(&self)->bool{
@@ -80,6 +68,8 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
 
 }
 
+impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{}
+
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     pub fn check_color(&self)->bool{
         if self.root.is_none(){
@@ -89,7 +79,43 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         return height_option.is_some();
     }
 
+    pub fn new()->Self{
+        RedBlackTree{root: None}
+    }
+
+    fn delete(&mut self, value: T)->Option<T>{
+        let (deleted, new_root) = delete_node(self.root.clone(), value);
+        if new_root.is_some(){
+            self.root = new_root.unwrap().clone();
+        }
+        return deleted;
+    }
+
+    fn insert(&mut self, value:T)->bool{
+        true
+    }
+
+    // repeating
+    fn is_empty(&self)->bool{
+        TreeTrait::<T, TreeNode<T>>::is_empty(self)
+    }
+
+    fn count_leaves(&self)->u32{
+        TreeTrait::<T, TreeNode<T>>::count_leaves(self)
+    }
+    fn print(&self, verbose: bool){
+        TreeTrait::<T, TreeNode<T>>::print(self, verbose)
+    }
+    fn height(&self)->u32{
+        TreeTrait::<T, TreeNode<T>>::height(self)
+    }
+    fn in_order_traverse(&self)->Vec<T>{
+        TreeTrait::<T, TreeNode<T>>::in_order_traverse(self)
+    }
 }
+
+
+
 
 impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
     fn left(&self)->TreeRoot<T>{
