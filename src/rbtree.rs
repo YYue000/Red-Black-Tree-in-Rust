@@ -41,6 +41,34 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
     fn insert(&mut self, value:T)->bool{
         true
     }
+
+    fn check_valid(&self)->bool{
+        if self.root.is_none(){
+            return true;
+        }
+
+        let root_nd = self.root.clone().unwrap();
+        if root_nd.borrow().color != NodeColor::Black{
+            println!("Root node should be black");
+            return false;
+        }
+        let vec = self.in_order_traverse();
+        let order = vec.iter().zip(vec.iter().skip(1))
+            .all(|(current, next)| current<next);
+        if !order{
+            println!("Order error");
+            return false;
+        }
+        if !root_nd.borrow().check_red_children(){
+            println!("Red node doesn't have two black children");
+            return false;
+        }
+        if !self.check_color(){
+            println!("Black nodes in the paths don't agree");
+            return false;
+        }
+        return true;
+    }
 }
 
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
@@ -51,6 +79,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         let height_option = self.root.clone().unwrap().borrow().check_color();
         return height_option.is_some();
     }
+
 }
 
 impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
@@ -157,6 +186,35 @@ impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
         }
     }
 
+    fn check_red_children(&self)->bool{
+        let current = match &self.color{
+            NodeColor::Red=>
+            match (self.left.is_some(), self.right.is_some()){
+                (false, false)=>true,
+                (true, true)=>{
+                    let lc = self.left.clone().unwrap().borrow().color;
+                    let rc = self.right.clone().unwrap().borrow().color;
+                    lc == NodeColor::Black && rc == NodeColor::Black
+                },
+                _=>false
+            },
+            NodeColor::Black=>true
+        };
+        if !current{
+            return false;
+        }
+        if self.left.is_some(){
+            if !self.left.clone().unwrap().borrow().check_red_children(){
+                return false;
+            }
+        }
+        if self.right.is_some(){
+            if !self.right.clone().unwrap().borrow().check_red_children(){
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 fn delete_node<T: Ord+Copy+Debug+Display>(
@@ -417,9 +475,7 @@ mod test{
     }
     fn check_valid_delete(tree: &RedBlackTree<i32>, expect: Option<i32>, result: Option<i32>, pre_delete_vec: &mut Vec<i32>){
         let mut vec = tree.in_order_traverse();
-        let order = vec.iter().zip(vec.iter().skip(1)).all(|(current, next)| current<next);
-        assert!(order);
-        assert!(tree.check_color());
+        assert!(tree.check_valid());
         match expect{
             Some(value)=>{
                 assert!(result.is_some() && result.clone().unwrap() == value);

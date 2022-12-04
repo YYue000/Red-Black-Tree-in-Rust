@@ -69,6 +69,8 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
         }
         return result;
     }
+
+    fn check_valid(&self)->bool;
 }
 
 pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
