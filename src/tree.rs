@@ -33,11 +33,12 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
 
     fn insert(&mut self, value: T)->bool;
     fn delete(&mut self, value: T)->Option<T>;
+
     fn count_leaves(&self)->u32{
         if self.root().is_some(){
             return self.root().unwrap().borrow().count_leaves();
         }
-        return 0 as u32;
+        return self.DEFAULT_LEAF_NUM();
     }
     fn is_empty(&self)->bool{
         self.root().is_none()
@@ -56,7 +57,7 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
 
     fn height(&self)->u32{
         match self.root(){
-            None => 0,
+            None => self.DEFAULT_HEIGHT_NUM(),
             Some(node) => node.borrow().get_height(),
         }
     }
@@ -71,6 +72,15 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
     }
 
     fn check_valid(&self)->bool;
+
+    // assocated constants
+    fn DEFAULT_LEAF_NUM(&self)->u32{
+        0 as u32
+    }
+
+    fn DEFAULT_HEIGHT_NUM(&self)->u32{
+        0 as u32
+    }
 }
 
 pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{

@@ -69,6 +69,15 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
         }
         return true;
     }
+
+    fn DEFAULT_LEAF_NUM(&self)->u32{
+        2 as u32
+    }
+
+    fn DEFAULT_HEIGHT_NUM(&self)->u32{
+        1 as u32
+    }
+
 }
 
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
