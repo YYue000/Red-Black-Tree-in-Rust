@@ -247,6 +247,14 @@ fn delete_node<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>, value: T)->(Option<
         return (None, None);
     }
 
+    let mut root = root.clone();
+    if root.clone().unwrap().borrow().value != value{
+        let _root = search_node(root.clone(), value);
+        if _root.is_none(){
+            return (None, None);
+        }
+        root = _root.unwrap();
+    }
     let node = root.clone().unwrap();
     
     // Two children
@@ -538,6 +546,22 @@ mod test{
         tree.insert(8);
         tree.insert(80);
         assert!(tree.delete(25).is_none());
+    }
+
+    #[test]
+    fn test_delete7(){
+        // two children
+        let mut tree: AVLTree<i32> = AVLTree{root: None};
+        tree.insert(5);
+        tree.insert(8);
+        tree.insert(2);
+        tree.insert(6);
+        tree.insert(10);
+        let mut vec = tree.in_order_traverse();
+        tree.print(true);
+        let d = tree.delete(5);
+        tree.print(true);
+        check_valid_delete(&tree, Some(5), d, &mut vec);
     }
 
 
