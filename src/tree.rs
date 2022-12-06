@@ -29,13 +29,13 @@ impl Direction{
 
 pub trait SimpleTreeTrait<T: Ord+Copy+Debug+Display>{
 
-    fn insert(&mut self, value: T)->bool{true}
-    fn delete(&mut self, value: T)->Option<T>{None}
-    fn count_leaves(&self)->u32{0}
-    fn is_empty(&self)->bool{true}
-    fn print(&self, verbose: bool){}
-    fn height(&self)->u32{0}
-    fn in_order_traverse(&self)->Vec<T>{Vec::<T>::new()}
+    fn insert(&mut self, value: T)->bool;
+    fn delete(&mut self, value: T)->Option<T>;
+    fn count_leaves(&self)->u32;
+    fn is_empty(&self)->bool;
+    fn print(&self, verbose: bool);
+    fn height(&self)->u32;
+    fn in_order_traverse(&self)->Vec<T>;
 }
 
 
@@ -98,6 +98,11 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
     fn parent(&self)->Option<Rc<RefCell<Self>>>;
     fn value(&self)->T;
 
+    fn set_left(&mut self, v: Option<Rc<RefCell<Self>>>);
+    fn set_right(&mut self, v: Option<Rc<RefCell<Self>>>);
+    fn set_parent(&mut self, v: Option<Rc<RefCell<Self>>>);
+    fn set_value(&mut self, v: T);
+
     fn get_min(&self)->T{
         match &self.left(){
             None=>self.value(),
@@ -105,6 +110,47 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
                 nd.borrow().get_min()
             }
         }
+    }
+
+    fn delete_node(&mut self)->Option<Option<Rc<RefCell<Self>>>>{
+        // deal nodes with 1 or 0 child
+        assert!(!(self.left().is_some()&&self.right().is_some()));
+
+        let child = match self.right(){
+            None=>self.left(),
+            Some(_)=>self.right()
+        };
+
+        if child.is_some(){
+            child.clone().unwrap().borrow_mut().set_parent(self.parent());
+        }
+        let ret = match self.parent(){
+            Some(parent)=>{
+                let direction = self.get_direction_to_parent();
+                match direction{
+                    Direction::Left=>parent.borrow_mut().set_left(self.left()),
+                    Direction::Right=>parent.borrow_mut().set_right(self.right())
+                };
+                None
+            },
+            None=>Some(child)
+        };
+        self.set_parent(None);
+        self.set_left(None);
+        self.set_right(None);
+        return ret;
+    }
+
+    fn get_child_delete_helper(&self)->(Option<Rc<RefCell<Self>>>, Direction){
+        assert!(!(self.left().is_some()&&self.right().is_some()));
+        // one child or no child
+        if self.left().is_some(){
+            return (self.left(), Direction::Left);
+        }
+        if self.right().is_some(){
+            return (self.right(), Direction::Right);
+        }
+        return (None, Direction::Left);
     }
 
     fn get_direction_to_parent(&self)->Direction{
@@ -179,6 +225,11 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
 
     fn print_structure(&self){
         let height = self.get_height() as usize;
+        if height < 2{
+            let info = self.structure_info();
+            println!("{}", info);
+            return
+        }
 
         let array_height = height*2-1;
         let array_width = (2 << (height-2))*3+1 as usize;
@@ -254,28 +305,117 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
     }
 }
 
-pub struct SimpleTreeNode<T>{
-    pub value: T,
-    pub parent: Option<Rc<RefCell<SimpleTreeNode<T>>>>,
-    left: Option<Rc<RefCell<SimpleTreeNode<T>>>>, 
-    right: Option<Rc<RefCell<SimpleTreeNode<T>>>>
+
+pub fn rotate<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(parent: &Option<Rc<RefCell<N>>>,
+    child: &Option<Rc<RefCell<N>>>){
+    let p = parent.clone().unwrap();
+    let c = child.clone().unwrap();
+
+    let node_direction = c.borrow().get_direction_to_parent(); 
+
+    let grad = p.borrow().parent();
+    if grad.is_some(){
+        let p_direct = p.borrow().get_direction_to_parent();
+        match p_direct{
+            Direction::Left=>{
+                grad.clone().unwrap().borrow_mut().set_left(child.clone());
+            },
+            Direction::Right=>{
+                grad.clone().unwrap().borrow_mut().set_right(child.clone());
+            }
+        }
+    }
+    match node_direction{
+        Direction::Left=>{
+            //rotate right
+            let gc = c.borrow().right();
+            p.borrow_mut().set_left(gc.clone());
+            c.borrow_mut().set_right(parent.clone());
+            if gc.is_some(){
+                gc.unwrap().borrow_mut().set_parent(parent.clone());
+            }
+        },
+        Direction::Right=>{
+            //rotate left
+            let gc = c.borrow().left();
+            p.borrow_mut().set_right(gc.clone());
+            c.borrow_mut().set_left(parent.clone());
+            if gc.is_some(){
+                gc.unwrap().borrow_mut().set_parent(parent.clone());
+            }
+
+        },
+    }
+    p.borrow_mut().set_parent(child.clone());
+    c.borrow_mut().set_parent(grad.clone());
 }
 
-impl<T:Ord+Copy+Debug+Display> TreeNodeTrait<T> for SimpleTreeNode<T>{
-    fn left(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
-    fn right(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
-    fn parent(&self)->Option<Rc<RefCell<SimpleTreeNode<T>>>>{None}
-    fn value(&self)->T{
-        self.value
+pub fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
+    Option<Option<Rc<RefCell<N>>>>{
+    if root.is_none(){
+        return None;
     }
-    fn structure_info(&self)->String{
-        "hello".to_string()
-    }
-    fn fmt_info(&self)->String{
-        "hello".to_string()
-    }
+
+    let node = root.clone().unwrap();
+
+    // return None, None if value is not in the tree
+    let nd_val = node.borrow().value();
+    match value{
+        v if v < nd_val=>{
+            let left = node.borrow().left();
+            match left{
+                None=>{return None;}
+                Some(_)=>{
+                    let left = node.borrow().left();
+                    return search_node(left, value);
+                }
+            }
+        },
+        v if v > nd_val =>{
+            let right = node.borrow().right();
+            match right{
+                None=>{return None;}
+                Some(_)=>{
+                    let right = node.borrow().right();
+                    return search_node(right, value);
+                }
+            }
+        },
+        _=>{return Some(root);}
+    };
 }
 
-pub trait Wrapper{
-    fn func(&self){}
+pub fn search_insert_point<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
+    Option<Rc<RefCell<N>>>{
+    if root.is_none(){
+        return None;
+    }
+
+    let node = root.clone().unwrap();
+
+    // return None, None if value is in the tree
+    let nd_val = node.borrow().value();
+    match value{
+        v if v < nd_val=>{
+            let left = node.borrow().left();
+            match left{
+                None=>{return root;}
+                Some(_)=>{
+                    let left = node.borrow().left();
+                    return search_insert_point(left, value);
+                }
+            }
+        },
+        v if v > nd_val =>{
+            let right = node.borrow().right();
+            match right{
+                None=>{return root;}
+                Some(_)=>{
+                    let right = node.borrow().right();
+                    return search_insert_point(right, value);
+                }
+            }
+        },
+        _=>{return None;}
+    };
 }

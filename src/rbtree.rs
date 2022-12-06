@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::fmt::{Debug, Display};
 
-pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait};
+pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait, rotate, search_node};
 
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum NodeColor {
@@ -68,7 +68,29 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
 
 }
 
-impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{}
+impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
+    fn insert(&mut self, value: T)->bool{
+        RedBlackTree::<T>::insert(self, value)
+    }
+    fn delete(&mut self, value: T)->Option<T>{
+        RedBlackTree::<T>::delete(self, value)
+    }
+    fn count_leaves(&self)->u32{
+        RedBlackTree::<T>::count_leaves(self)
+    }
+    fn is_empty(&self)->bool{
+        RedBlackTree::<T>::is_empty(self)
+    }
+    fn print(&self, verbose: bool){
+        RedBlackTree::<T>::print(self, verbose)
+    }
+    fn height(&self)->u32{
+        RedBlackTree::<T>::height(self)
+    }
+    fn in_order_traverse(&self)->Vec<T>{
+        RedBlackTree::<T>::in_order_traverse(self)
+    }
+}
 
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     pub fn check_color(&self)->bool{
@@ -84,11 +106,15 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     }
 
     fn delete(&mut self, value: T)->Option<T>{
-        let (deleted, new_root) = delete_node(self.root.clone(), value);
+        let node = search_node(self.root.clone(), value);
+        if node.is_none(){
+            return None;
+        }
+        let new_root = delete_node(node.clone().unwrap(), value);
         if new_root.is_some(){
             self.root = new_root.unwrap().clone();
         }
-        return deleted;
+        return Some(value);
     }
 
     fn insert(&mut self, value:T)->bool{
@@ -131,6 +157,19 @@ impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
         self.value
     }
 
+    fn set_left(&mut self, v: TreeRoot<T>){
+        self.left = v
+    }
+    fn set_right(&mut self, v: TreeRoot<T>){
+        self.right = v
+    }
+    fn set_parent(&mut self, v: TreeRoot<T>){
+        self.parent = v
+    }
+    fn set_value(&mut self, v: T){
+        self.value = v;
+    }
+
     fn structure_info(&self)->String{
         let val = self.value.to_string();
         let cl = match self.color{
@@ -152,47 +191,6 @@ impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
 }
 
 impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
-    fn get_child_delete_helper(&self)->(TreeRoot<T>, Direction){
-        // one child or no child
-        if self.left.is_some(){
-            return (self.left.clone(), Direction::Left);
-        }
-        if self.right.is_some(){
-            return (self.right.clone(), Direction::Right);
-        }
-        return (None, Direction::Left);
-    }
-
-    fn replace_current_with_unique_child_delete_helper(&mut self, child: &TreeRoot<T>)->Option<TreeRoot<T>>{
-        // deal nodes with 1 or 0 child
-        assert!(!(self.left.is_some()&&self.right.is_some()));
-        if child.is_some(){
-            child.clone().unwrap().borrow_mut().parent = self.parent.clone();
-        }
-        let ret = match self.parent.clone(){
-            Some(parent)=>{
-                let direction = self.get_direction_to_parent();
-                match direction{
-                    Direction::Left=>parent.borrow_mut().left = self.left.clone(),
-                    Direction::Right=>parent.borrow_mut().right = self.right.clone()
-                };
-                None
-            },
-            None=>Some(child.clone())
-        };
-        self.parent = None;
-        self.left = None;
-        self.right = None;
-        return ret;
-    }
-
-    fn delete_node(&mut self)->Option<TreeRoot<T>>{
-        let child = match self.right.clone(){
-            None=>self.left.clone(),
-            Some(_)=>self.right.clone()
-        };
-        self.replace_current_with_unique_child_delete_helper(&child)
-    }
 
     fn check_color(&self)->Option<usize>{
         let left_height = if let Some(ln)=self.left.clone(){
@@ -252,60 +250,34 @@ impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
     }
 }
 
+
 fn delete_node<T: Ord+Copy+Debug+Display>(
-root: TreeRoot<T>, value: T)->(Option<T>, Option<TreeRoot<T>>){
+    root: TreeRoot<T>, value: T)->Option<TreeRoot<T>>{
     if root.is_none(){
-        return (None, None);
+        return None;
     }
 
     let node = root.clone().unwrap();
 
-
-    // return None, None if value is not in the tree
-    let nd_val = node.borrow().value;
-    match value{
-        v if v < nd_val=>{
-            let left = node.borrow().left.clone();
-            match left{
-                None=>{return (None, None);}
-                Some(_)=>{
-                    let left = node.borrow().left.clone();
-                    return delete_node(left, value);
-                }
-            }
-        },
-        v if v > nd_val =>{
-            let right = node.borrow().right.clone();
-            match right{
-                None=>{return (None, None);}
-                Some(_)=>{
-                    let right = node.borrow().right.clone();
-                    return delete_node(right, value);
-                }
-            }
-        },
-        _=>{}
-    };
-
-    
-    // Case0.1: No child
-    // red=>just delete it
-    if node.borrow().left.is_none() && node.borrow().right.is_none() && node.borrow().color == NodeColor::Red{
-        let ret = node.borrow_mut().delete_node();
-        return (Some(value), ret);
-    }
-    //else: no child&&black; two children; one child
-
-    // Case0.2: Two children
+    // Case0.1: Two children
     // => like BSTree
     if node.borrow().left.is_some() && node.borrow().right.is_some(){
         let right_min = node.borrow().right.clone().unwrap().borrow().get_min();
         let rchild = node.borrow().right.clone();
-        let (_v, r) = delete_node(rchild, right_min);
+        let r = delete_node(rchild, right_min);
         node.borrow_mut().value = right_min;
-        return (Some(value), r);
+        return r;
     }
-    // else: one child; no child && black
+    // else: no child; one child
+    
+
+    // Case0.2: No child
+    // red=>just delete it
+    if node.borrow().left.is_none() && node.borrow().right.is_none() && node.borrow().color == NodeColor::Red{
+        let ret = node.borrow_mut().delete_node();
+        return ret;
+    }
+    //else: one child&&black; one child
 
     // Case1: current node is red
     // Red case ends
@@ -315,12 +287,12 @@ root: TreeRoot<T>, value: T)->(Option<T>, Option<TreeRoot<T>>){
     // Case2: current black && one child
     // Case2.1: current is black && unique child is red
     // => Replace it with its red child
-    let (child, direction) = node.borrow().get_child_delete_helper();
+    let (child, _direction) = node.borrow().get_child_delete_helper();
     if child.is_some(){
         if child.clone().unwrap().borrow().color == NodeColor::Red{
             child.clone().unwrap().borrow_mut().color = NodeColor::Black;
             let ret = node.borrow_mut().delete_node();
-            return (Some(node.borrow().value), ret);
+            return ret;
         }
         else{
             // current black && unique child black=>invalid case;
@@ -333,12 +305,12 @@ root: TreeRoot<T>, value: T)->(Option<T>, Option<TreeRoot<T>>){
     // Case3: 
     let ret0 = delete_rebalance_helper(root.clone());
     let ret = node.borrow_mut().delete_node();
-    let r = match &ret{
+    match &ret{
         None=>ret0,
         _=> ret
-    };
-    return (Some(value), r);
+    }
 }
+
 fn delete_rebalance_helper<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>)->Option<TreeRoot<T>> {
     if root.is_none(){
         return None;
@@ -452,48 +424,6 @@ fn delete_rebalance_helper<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>)->Option
    return  new_root_ret;
 }
 
-fn rotate<T: Ord+Copy+Debug+Display>(parent: &TreeRoot<T>, child: &TreeRoot<T>){
-    let p = parent.clone().unwrap();
-    let c = child.clone().unwrap();
-
-    let node_direction = c.borrow().get_direction_to_parent(); 
-
-    let grad = p.borrow().parent.clone();
-    if grad.is_some(){
-        let p_direct = p.borrow().get_direction_to_parent();
-        match p_direct{
-            Direction::Left=>{
-                grad.clone().unwrap().borrow_mut().left = child.clone();
-            },
-            Direction::Right=>{
-                grad.clone().unwrap().borrow_mut().right = child.clone();
-            }
-        }
-    }
-    match node_direction{
-        Direction::Left=>{
-            //rotate right
-            let gc = c.borrow().right.clone();
-            p.borrow_mut().left = gc.clone();
-            c.borrow_mut().right = parent.clone();
-            if gc.is_some(){
-                gc.clone().unwrap().borrow_mut().parent = parent.clone();
-            }
-        },
-        Direction::Right=>{
-            //rotate left
-            let gc = c.borrow().left.clone();
-            p.borrow_mut().right = gc.clone();
-            c.borrow_mut().left = parent.clone();
-            if gc.is_some(){
-                gc.clone().unwrap().borrow_mut().parent = parent.clone();
-            }
-
-        },
-    }
-    p.borrow_mut().parent = child.clone();
-    c.borrow_mut().parent = grad.clone();
-}
 
 #[cfg(test)]
 mod test{
