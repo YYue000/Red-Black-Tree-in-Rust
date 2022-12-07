@@ -93,6 +93,7 @@ impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
 }
 
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
+
     pub fn check_color(&self)->bool{
         if self.root.is_none(){
             return true;
@@ -119,6 +120,10 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
 
     pub fn insert(&mut self, value:T)->bool{
         true
+    }
+
+    pub fn search(&self, value: T)->bool{
+        search_node(self.root.clone(), value).is_some()
     }
 
     // repeating

@@ -72,6 +72,10 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
         AVLTree{root: None}
     }
 
+    pub fn search(&self, value: T)->bool{
+        search_node(self.root.clone(), value).is_some()
+    }
+
     fn delete(&mut self, value: T)->Option<T>{
         let node = search_node(self.root.clone(), value);
         if node.is_none(){
