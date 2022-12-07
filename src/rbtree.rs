@@ -105,7 +105,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         RedBlackTree{root: None}
     }
 
-    fn delete(&mut self, value: T)->Option<T>{
+    pub fn delete(&mut self, value: T)->Option<T>{
         let node = search_node(self.root.clone(), value);
         if node.is_none(){
             return None;
@@ -117,7 +117,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         return Some(value);
     }
 
-    fn insert(&mut self, value:T)->bool{
+    pub fn insert(&mut self, value:T)->bool{
         true
     }
 

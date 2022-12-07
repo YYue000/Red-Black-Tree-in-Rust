@@ -85,7 +85,7 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
         return deleted;
     }
 
-    fn insert(&mut self, value:T)->bool{
+    pub fn insert(&mut self, value:T)->bool{
         if self.root.is_none(){
             self.root = TreeNode::new_root(value);
             return true;
@@ -123,7 +123,14 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
             None=>0,
             Some(r)=>r.borrow().height()
         }
+
     }
+
+    pub fn len(&self) -> usize {
+        self.len()
+    }
+
+
 
     // repeating
     fn is_empty(&self)->bool{
@@ -183,6 +190,8 @@ impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
 }
 
 impl <T: Ord+Copy+Debug+Display> TreeNode<T>{
+
+
     fn new_root(value: T)->TreeRoot<T>{
         let nd = TreeNode{
             value: value,
