@@ -1,3 +1,7 @@
+//! AVL Tree
+//!
+//! An implementation of AVL Tree
+
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::fmt::{Debug, Display};
@@ -18,6 +22,9 @@ struct TreeNode<T: Ord+Copy+Debug+Display>{
 
 type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 
+/// Struct of AVLTree
+///
+/// connected with private struct of AVL tree node
 pub struct AVLTree<T: Ord+Copy+Debug+Display> {
     root: TreeRoot<T>
 }
@@ -27,6 +34,16 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for AVLTree<T>{
         self.root.clone()
     }
 
+    /// Check whether the AVL tree is valid
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.check_valid());
+    /// ```
     fn check_valid(&self)->bool{
         if self.root.is_none(){
             return true;
@@ -68,15 +85,30 @@ impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for AVLTree<T>{
 }
 
 impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
+    /// Create a new AVLTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// ```
     pub fn new()->Self{
         AVLTree{root: None}
     }
 
-    pub fn search(&self, value: T)->bool{
-        search_node(self.root.clone(), value).is_some()
-    }
 
-    fn delete(&mut self, value: T)->Option<T>{
+    /// Delete a node in the AVLTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// let deleted = avltree.delete(8);
+    /// println!("{:?}", deleted.is_none());
+    /// ```
+    pub fn delete(&mut self, value: T)->Option<T>{
         let node = search_node(self.root.clone(), value);
         if node.is_none(){
             return None;
@@ -89,6 +121,19 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
         return deleted;
     }
 
+    /// Insert a node to the AVLTree
+    ///
+    /// # Panic
+    /// Illegal cases for rotation
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// let inserted = avltree.insert(8);
+    /// println!("{}", avltree.search(8));
+    /// ```
     pub fn insert(&mut self, value:T)->bool{
         if self.root.is_none(){
             self.root = TreeNode::new_root(value);
@@ -122,7 +167,17 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
 
     }
 
-    fn height(&self)->u32{
+    /// Get height of the AVLTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.height());
+    /// ```
+    pub fn height(&self)->u32{
         match self.root.clone(){
             None=>0,
             Some(r)=>r.borrow().height()
@@ -130,23 +185,63 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
 
     }
 
-    pub fn len(&self) -> usize {
-        self.len()
-    }
-
-
-
     // repeating
+    /// Check if the AVLTree is empty
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.is_empty());
+    /// ```
     fn is_empty(&self)->bool{
         TreeTrait::<T, TreeNode<T>>::is_empty(self)
     }
-
+    /// Count number of leaves in the AVLTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.count_leaves());
+    /// ```
     fn count_leaves(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::count_leaves(self)
     }
+    /// Print the information of the tree
+    ///
+    /// Print the tree structure;
+    ///
+    /// Additional verbose information of the tree if verbose is true.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.print(true));
+    /// ```
     fn print(&self, verbose: bool){
         TreeTrait::<T, TreeNode<T>>::print(self, verbose)
     }
+    /// In-order traverse of the tree
+    ///
+    /// The output will be a sorted vector
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// avltree.insert(10);
+    /// println!("{}", avltree.in_order_traverse());
+    /// ```
     fn in_order_traverse(&self)->Vec<T>{
         TreeTrait::<T, TreeNode<T>>::in_order_traverse(self)
     }
@@ -194,7 +289,6 @@ impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
 }
 
 impl <T: Ord+Copy+Debug+Display> TreeNode<T>{
-
 
     fn new_root(value: T)->TreeRoot<T>{
         let nd = TreeNode{

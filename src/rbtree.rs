@@ -1,15 +1,19 @@
+//! Red Black Tree
+//!
+//! An implementation of red black tree
+
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::fmt::{Debug, Display};
 
 pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait, rotate, search_node};
 
+/// Color of the nodes in red black tree
 #[derive(Clone, Debug, PartialEq, Copy)]
 pub enum NodeColor {
     Red,
     Black, 
 }
-
 
 #[derive(Clone, Debug, PartialEq)]
 struct TreeNode<T: Ord+Copy+Debug+Display> {
@@ -20,6 +24,8 @@ struct TreeNode<T: Ord+Copy+Debug+Display> {
     right: TreeRoot<T>
 }
 type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
+
+/// Struct of the red black tree
 pub struct RedBlackTree<T: Ord+Copy+Debug+Display>{
     root: TreeRoot<T>
 }
@@ -30,6 +36,16 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
         self.root.clone()
     }
 
+    /// Check whether the red black tree is valid
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.check_valid());
+    /// ```
     fn check_valid(&self)->bool{
         if self.root.is_none(){
             return true;
@@ -58,10 +74,11 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
         return true;
     }
 
+    /// Helper for count_leaves()
     fn DEFAULT_LEAF_NUM(&self)->u32{
         2 as u32
     }
-
+    /// Helper for height()
     fn DEFAULT_HEIGHT_NUM(&self)->u32{
         1 as u32
     }
@@ -94,7 +111,7 @@ impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
 
 impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
 
-    pub fn check_color(&self)->bool{
+    fn check_color(&self)->bool{
         if self.root.is_none(){
             return true;
         }
@@ -102,10 +119,28 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         return height_option.is_some();
     }
 
+    /// Create a new RedBlackTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// ```
     pub fn new()->Self{
         RedBlackTree{root: None}
     }
 
+    /// Delete a node in the RedBlackTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// let deleted = rbtree.delete(8);
+    /// println!("{:?}", deleted.is_none());
+    /// ```
     pub fn delete(&mut self, value: T)->Option<T>{
         let node = search_node(self.root.clone(), value);
         if node.is_none(){
@@ -118,28 +153,95 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         return Some(value);
     }
 
+    /// Insert a node to the AVLTree
+    ///
+    /// # Panic
+    /// Illegal cases for rotation
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// let inserted = rbtree.insert(8);
+    /// println!("{}", rbtree.search(8));
+    /// ```
     pub fn insert(&mut self, value:T)->bool{
         true
     }
 
-    pub fn search(&self, value: T)->bool{
-        search_node(self.root.clone(), value).is_some()
-    }
-
     // repeating
+    /// Check if the RedBlackTree is empty
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.is_empty());
+    /// ```
     fn is_empty(&self)->bool{
         TreeTrait::<T, TreeNode<T>>::is_empty(self)
     }
 
+    /// Count number of leaves in the RedBlackTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.count_leaves());
+    /// ```
     fn count_leaves(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::count_leaves(self)
     }
+    /// Print the information of the tree
+    ///
+    /// Print the tree structure;
+    ///
+    /// Additional verbose information of the tree if verbose is true.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.print(true));
+    /// ```
     fn print(&self, verbose: bool){
         TreeTrait::<T, TreeNode<T>>::print(self, verbose)
     }
+
+    /// Get height of the RedBlackTree
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.height());
+    /// ```
     fn height(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::height(self)
     }
+    /// In-order traverse of the tree
+    ///
+    /// The output will be a sorted vector
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// rbtree.insert(10);
+    /// println!("{}", rbtree.in_order_traverse());
+    /// ```
     fn in_order_traverse(&self)->Vec<T>{
         TreeTrait::<T, TreeNode<T>>::in_order_traverse(self)
     }

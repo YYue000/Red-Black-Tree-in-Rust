@@ -1,12 +1,16 @@
 
 fn main(){
+    //! main
+    /// It's an implementation of two binary trees, AVL tree and red-black tree.
+    ///
+    
     use testing::*;
     testing::main_loop();
 }
 
 mod testing{
     use std::io;
-    use BTrees::prelude::*;
+    use BinaryTrees::prelude::*;
 
     struct Tester{
         tree: Option<Box<dyn SimpleTreeTrait<i32>>>

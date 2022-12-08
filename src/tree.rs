@@ -1,9 +1,14 @@
+//! Traits for binary trees
+//!
+//! Define traits for tree structs and tree node structs
+
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::cmp::max;
 
 use std::fmt::{Debug, Display};
 
+/// Enum of direction for binary trees
 pub enum Direction{
     Left,
     Right
@@ -11,12 +16,27 @@ pub enum Direction{
 
 
 impl Direction{
+    /// Get the opposite direction
+    ///
+    /// Can be used to get a node's sibling
+    ///
+    /// # Example
+    /// let l = Direction::Left;
+    /// let r = l.opposite();
     pub fn opposite(&self)->Direction{
         match self{
             Direction::Left=>Direction::Right,
             Direction::Right=>Direction::Left
         }
     }
+
+    /// Check if current node is Direction::Left
+    ///
+    /// # Example
+    /// let l = Direction::Left;
+    /// if l.is_left(){
+    ///     println!("Left");
+    /// }
     fn is_left(&self)->bool{
         match self{
             Direction::Left=>true,
@@ -27,8 +47,11 @@ impl Direction{
 
 
 
+/// A simple and general trait for trees
+///
+/// All the trees in the lib implements it. So can be used for dynamic dispatch.
 pub trait SimpleTreeTrait<T: Ord+Copy+Debug+Display>{
-
+    
     fn insert(&mut self, value: T)->bool;
     fn delete(&mut self, value: T)->Option<T>;
     fn count_leaves(&self)->u32;
@@ -36,22 +59,33 @@ pub trait SimpleTreeTrait<T: Ord+Copy+Debug+Display>{
     fn print(&self, verbose: bool);
     fn height(&self)->u32;
     fn in_order_traverse(&self)->Vec<T>;
+
 }
 
-
+/// Trait for the binary trees
+///
+/// Should implement SimpleTreeTrait
 pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: SimpleTreeTrait<T>{
     
+    /// Get the root of the tree
     fn root(&self)->Option<Rc<RefCell<TreeNode>>>;
 
+    /// Count number of leaves in the tree
     fn count_leaves(&self)->u32{
         if self.root().is_some(){
             return self.root().unwrap().borrow().count_leaves();
         }
         return self.DEFAULT_LEAF_NUM();
     }
+    /// Check whether the tree is empty
     fn is_empty(&self)->bool{
         self.root().is_none()
     }
+    /// Print the information of the tree
+    ///
+    /// Print the tree structure;
+    ///
+    /// Additional verbose information of the tree if verbose is true. 
     fn print(&self, verbose: bool){
         let root = self.root();
         if root.is_none() {
@@ -64,6 +98,7 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
         root.unwrap().borrow().print_structure();
     }
 
+    /// Get height of the AVLTree
     fn height(&self)->u32{
         match self.root(){
             None => self.DEFAULT_HEIGHT_NUM(),
@@ -71,6 +106,9 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
         }
     }
 
+    /// In-order traverse of the tree
+    ///
+    /// The output will be a sorted vector
     fn in_order_traverse(&self)->Vec<T>{
         let mut result = Vec::<T>::new();
         let root = self.root();
@@ -80,29 +118,59 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
         return result;
     }
 
+    /// Search a node in the Tree
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// let is_contain = avltree.search(8);
+    /// ```
+    fn search(&self, value: T)->bool{
+        search_node(self.root(), value).is_some()
+    }
+
+    /// Check whether the tree is valid
     fn check_valid(&self)->bool;
 
     // assocated constants
+    /// An associated value for count_leaves
+    ///
+    /// 0 for default and 2 for NIL nodes
     fn DEFAULT_LEAF_NUM(&self)->u32{
         0 as u32
     }
 
+    /// An associated value for height
+    ///
+    /// 0 for default and 1 for NIL nodes
     fn DEFAULT_HEIGHT_NUM(&self)->u32{
         0 as u32
     }
 }
 
+/// Trait for the tree nodes
 pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
+    /// Get reference to left child
     fn left(&self)->Option<Rc<RefCell<Self>>>;
+    /// Get reference to right child
     fn right(&self)->Option<Rc<RefCell<Self>>>;
+    /// Get reference to parent
     fn parent(&self)->Option<Rc<RefCell<Self>>>;
+    /// Get the nodes' value
     fn value(&self)->T;
 
+    /// Set left child
     fn set_left(&mut self, v: Option<Rc<RefCell<Self>>>);
+    /// Set right child
     fn set_right(&mut self, v: Option<Rc<RefCell<Self>>>);
+    /// Set parent
     fn set_parent(&mut self, v: Option<Rc<RefCell<Self>>>);
+    /// Set value
     fn set_value(&mut self, v: T);
 
+    /// Get the minimum of its right sub-tree
+    ///
+    /// Used for deletion
     fn get_min(&self)->T{
         match &self.left(){
             None=>self.value(),
@@ -112,6 +180,10 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Delete a node
+    ///
+    /// Link its parent and children;
+    /// Clear its reference
     fn delete_node(&mut self)->Option<Option<Rc<RefCell<Self>>>>{
         // deal nodes with 1 or 0 child
         assert!(!(self.left().is_some()&&self.right().is_some()));
@@ -141,6 +213,14 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         return ret;
     }
 
+    /// A helper function for deletion
+    ///
+    /// Get current node's child
+    ///
+    /// Assumption: current node has only one or no child
+    ///
+    /// # Panic
+    /// if current node has two children
     fn get_child_delete_helper(&self)->(Option<Rc<RefCell<Self>>>, Direction){
         assert!(!(self.left().is_some()&&self.right().is_some()));
         // one child or no child
@@ -152,7 +232,11 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
         return (None, Direction::Left);
     }
-
+    
+    /// Get whether current node is the left child of its parent or right
+    ///
+    /// # Panic
+    /// parent is None
     fn get_direction_to_parent(&self)->Direction{
         assert!(self.parent().is_some());
         let p = self.parent().unwrap();
@@ -166,6 +250,7 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Get the sibling of current node
     fn get_sibling(&self)->Option<Rc<RefCell<Self>>>{
         if self.parent().is_none(){
             return None;
@@ -177,11 +262,15 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
             Direction::Right=>p.borrow().left().clone(),
         }
     }
-
+    
+    /// Check whether current node is a leaf node
     fn is_leaf(&self)->bool{
         self.left().is_none() && self.right().is_none()
     }
-
+    
+    /// Print the verbose information of the node
+    ///
+    /// Helper of print()
     fn print_tree_as_fmt(&self, ident: String){
         println!("{}",self.fmt_info());
 
@@ -196,6 +285,7 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Helper of in_order_traverse()
     fn inorder(&self, result: &mut Vec<T>) {
         if self.left().is_some() {
             self.left().unwrap().borrow().inorder(result);
@@ -206,6 +296,7 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Helper of height()
     fn get_height(&self)->u32{
         let left_height = if let Some(ln)=self.left().clone(){
             ln.borrow().get_height()
@@ -223,6 +314,7 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         return max(left_height, right_height)+1;
     }
 
+    /// Helper to print the stucture of the tree as a tree
     fn print_structure(&self){
         let height = self.get_height() as usize;
         if height < 2{
@@ -264,6 +356,7 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Helper to print_structure
     fn print_structure_helper(&self, row_index: usize, column_index: usize,
         container: &mut [&mut [String]], height: usize){
         container[row_index][column_index] = self.structure_info();
@@ -287,10 +380,13 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
         }
     }
 
+    /// Information in print_structure
     fn structure_info(&self)->String;
 
+    /// Information in print_tree_as_fmt
     fn fmt_info(&self)->String;
 
+    /// Helper of count_leaves
     fn count_leaves(&self)->u32{
         if self.is_leaf(){
             return 1;
@@ -305,6 +401,44 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
     }
 }
 
+/// Rotation between the parent and the child
+///
+/// # Example
+/// ```
+///
+/// fn left_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///    let right = root.clone().unwrap().borrow().right.clone();
+///   rotate(&root, &right);
+///}
+
+///fn right_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///   let left = root.clone().unwrap().borrow().left.clone();
+///   rotate(&root, &left);
+///}
+///fn left_left_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///   left_rotate(&root);
+///   root.clone().unwrap().borrow_mut().update_height();
+///   root.clone().unwrap().borrow().parent.clone().unwrap().borrow_mut().update_height();
+///}
+
+///fn right_right_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///   right_rotate(&root);
+///   root.clone().unwrap().borrow_mut().update_height();
+///   root.clone().unwrap().borrow().parent.clone().unwrap().borrow_mut().update_height();
+///}
+
+///fn left_right_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///   let right = root.clone().unwrap().borrow().right();
+///   right_right_rotate(&right);
+///   left_left_rotate(&root);
+///}
+
+///fn right_left_rotate<T: Ord+Copy+Debug+Display>(root: &TreeRoot<T>){
+///   let left = root.clone().unwrap().borrow().left.clone();
+///   left_left_rotate(&left);
+///   right_right_rotate(&root);
+///}
+/// ```
 
 pub fn rotate<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(parent: &Option<Rc<RefCell<N>>>,
     child: &Option<Rc<RefCell<N>>>){
@@ -350,6 +484,7 @@ pub fn rotate<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(parent: &Option<Rc
     c.borrow_mut().set_parent(grad.clone());
 }
 
+/// Helper for Tree.search()
 pub fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
     Option<Option<Rc<RefCell<N>>>>{
     if root.is_none(){
@@ -385,6 +520,7 @@ pub fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<
     };
 }
 
+/// Helper for Tree.insert()
 pub fn search_insert_point<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
     Option<Rc<RefCell<N>>>{
     if root.is_none(){
