@@ -25,6 +25,7 @@ type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 /// Struct of AVLTree
 ///
 /// connected with private struct of AVL tree node
+#[derive(Clone, Debug, PartialEq)]
 pub struct AVLTree<T: Ord+Copy+Debug+Display> {
     root: TreeRoot<T>
 }

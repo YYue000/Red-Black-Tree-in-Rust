@@ -1,4 +1,3 @@
-
 fn main(){
     //! main
     /// It's an implementation of two binary trees, AVL tree and red-black tree.

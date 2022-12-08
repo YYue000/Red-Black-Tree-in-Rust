@@ -7,49 +7,48 @@ use BTrees::tree::*;
 
 
 
-fn bench_test_avl(array:&[i32]) {
-    for tree_size in array {
-        let mut tree = AVLTree::new();
-        for i in 0..*tree_size {
-            tree.insert(i);
-        }
-        //assert!(tree.is_balanced());
-        
-        for i in 0..*tree_size/10 {
-            tree.search(i);
-        }
+fn bench_insert_test_avl(array:[i32;5],index:usize) {
+    let tree_size = array[index];
+    let mut tree = AVLTree::new();
+    for i in 0..tree_size {
+        tree.insert(i);
     }
+
 }
 
-fn avl_benchmark(c: &mut Criterion) {
-    c.bench_function("Avl_insert_benchmark", |b| b.iter(|| bench_test_avl(black_box(&[10000, 40000, 70000, 100000, 130000]))));
+fn bench_search_test_avl(tree:AVLTree<i32>,tree_size:i32) {
+
+    for i in 0..tree_size/10 {
+        tree.search(i);
+        }
 }
 
-// criterion_group!(benches, avl_benchmark);
-// criterion_main!(benches);
+fn avl_benchmark_insert(c: &mut Criterion) {
+    let array =[10000, 40000, 70000, 100000, 130000];
+    let array_index = 4; // 0 to 4 for different size test, change this manually for 5 tests
+    println!("Avl benchmark insert test with size {}",array[array_index]);
+    c.bench_function("Avl_insert_benchmark", |b| b.iter(|| bench_insert_test_avl(black_box(array),array_index)));
+}
 
+fn avl_benchmark_search(c: &mut Criterion) {
+    let array =[10000, 40000, 70000, 100000, 130000];
+    let array_index = 4; // 0 to 4 for different size test, change this manually for 5 tests
+    println!("Avl benchmark search test with size {}",array[array_index]);
 
-
-
-fn bench_test_rbt(array:&[i32]) {
-    for tree_size in array {
-        let mut tree = RedBlackTree::new();
-        for i in 0..*tree_size {
-            tree.insert(i);
-        }
-        //assert_eq!(tree.len(), *tree_size as usize);
-
-        for i in 0..*tree_size/10 {
-            tree.search(i);
-        }
-
+    let mut tree = AVLTree::new();
+    let tree_size = array[array_index];
+    for i in 0..tree_size {
+        tree.insert(i);
     }
+
+    c.bench_function("Avl_search_benchmark", |b| b.iter(|| bench_search_test_avl(black_box(tree.clone()),tree_size)));
 }
-fn rbt_benchmark(c: &mut Criterion) {
-    c.bench_function("Rbt_insert_benchmark", |b| b.iter(|| bench_test_rbt(black_box(&[10000, 40000, 70000, 100000, 130000]))));
-}
-//
-//criterion_group!(benches, rbt_benchmark);
-criterion_group!(benches, avl_benchmark);
+
+criterion_group!(benches, avl_benchmark_insert,avl_benchmark_search);
 criterion_main!(benches);
+
+
+
+
+
 

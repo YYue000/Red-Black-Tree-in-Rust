@@ -167,7 +167,22 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// println!("{}", rbtree.search(8));
     /// ```
     pub fn insert(&mut self, value:T)->bool{
-        true
+        let root=self.root.clone();
+        let mut res=false;
+        self.root=match root {
+            Some(root) => {
+                let (new_root,res)=insert_node(root,value);
+                new_root
+            }
+            None => {
+                let mut new_node=TreeNode::new(value);
+                new_node.color=NodeColor::Black;
+                let new_root=Rc::new(RefCell::new(new_node));
+                res=true;
+                Some(new_root)
+            },
+        };
+        res 
     }
 
     // repeating
@@ -251,6 +266,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
 
 
 impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
+
     fn left(&self)->TreeRoot<T>{
         self.left.clone()
     }
@@ -298,6 +314,25 @@ impl<T: Ord+Copy+Debug+Display> TreeNodeTrait<T> for TreeNode <T>{
 }
 
 impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
+    fn new(value: T) -> Self {
+        TreeNode {
+            color: NodeColor::Red,
+            value: value,
+            parent: None,
+            left: None,
+            right: None,
+        }
+    }
+
+    fn new_with_parent(value: T, parent: Rc<RefCell<TreeNode<T>>>) -> Self {
+        TreeNode {
+            color: NodeColor::Red,
+            value: value,
+            parent: Some(parent),
+            left: None,
+            right: None,
+        }
+    }
 
     fn check_color(&self)->Option<usize>{
         let left_height = if let Some(ln)=self.left.clone(){
@@ -355,8 +390,202 @@ impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
         }
         return true;
     }
-}
 
+    pub fn is_red(node:TreeRoot<T>)->bool{
+        if node.is_none(){
+            //println!("uncle is none");
+            return false;
+        }else{
+            let unwraped_node=node.clone().unwrap();
+            if unwraped_node.borrow().color==NodeColor::Red{
+                return true;
+            }else{
+                return false;
+            }
+        }
+    }
+    fn set_red(node:Rc<RefCell<TreeNode<T>>>) -> Rc<RefCell<TreeNode<T>>> {
+        node.borrow_mut().color = NodeColor::Red;
+        return node;
+    }
+
+    fn set_black(node:Rc<RefCell<TreeNode<T>>>) -> Rc<RefCell<TreeNode<T>>> {
+        node.borrow_mut().color = NodeColor::Black;
+        return node;
+    }
+
+    pub fn get_root(node:Rc<RefCell<TreeNode<T>>>)-> TreeRoot<T>{
+        let parent=node.borrow().parent.clone();
+        match parent {
+            Some(p) => {
+                Self::get_root(p)
+            },
+            None => Some(node),                                                                  
+        }
+    }
+
+
+}
+fn insert_node<T: Ord+Copy+Debug+Display>(node:Rc<RefCell<TreeNode<T>>>, value: T) -> (TreeRoot<T>,bool){
+    //println!("insert {:?}",value);
+    if node.borrow().value ==value{
+        return (Some(node),false);
+    }else if node.borrow().value >value{
+        let left=node.borrow().left.clone();
+        match left {
+            Some(left_node) => {
+                insert_node(left_node,value);
+            }
+            None => {
+                node.borrow_mut().left= Some(Rc::new(RefCell::new(TreeNode::new_with_parent(value, node.clone()))));
+                let left=node.borrow().left.clone().unwrap();
+                insert_recolor(left);
+            },
+        }
+    }else {
+        let right=node.borrow().right.clone();
+        match right {
+            Some(right_node) => {
+                insert_node(right_node,value);
+            }
+            None => {
+                node.borrow_mut().right = Some(Rc::new(RefCell::new(TreeNode::new_with_parent(value, node.clone()))));
+                let right=node.borrow().right.clone().unwrap();
+                insert_recolor(right);
+            },
+        }
+    }
+    return (TreeNode::get_root(node),true);
+}
+fn insert_recolor<T: Ord+Copy+Debug+Display>(node:Rc<RefCell<TreeNode<T>>>){
+
+    let parent=node.borrow().parent.clone();
+    match parent {
+        Some(parent) =>{
+            //1.if parent is black, no need to change
+            if(parent.borrow().color==NodeColor::Black){
+                ();
+            }
+            //2.if parent is red
+            else{
+                let grand_parent=parent.borrow().parent.clone();
+                match grand_parent {
+                    Some(grand_parent) => {
+                        if(grand_parent.borrow().color==NodeColor::Red){
+                            panic!("insert into tree, red parent node have red grand parent.");
+                        }
+                        let parent_dir=parent.borrow().get_direction_to_parent();
+                        let node_dir=node.borrow().get_direction_to_parent();
+                        //2.1 RR
+                        if parent_dir==Direction::Right&&node_dir==Direction::Right{
+                            //println!("RR");
+                            let uncle=grand_parent.borrow().left.clone();
+                            //2.1.1 uncle=none||black               
+                            if !TreeNode::is_red(uncle.clone()){                             
+                                //grand parent node perform left rotation                              
+                                rotate(&Some(grand_parent.clone()),&Some(parent.clone()));
+                                //recolor parent to black and left sibling to red                                                               
+                                let parent=node.borrow().parent.clone().unwrap();
+                                TreeNode::set_black(parent.clone());
+                                let left_sibling=parent.borrow().left.clone().unwrap();                                
+                                TreeNode::set_red(left_sibling.clone());
+                            }
+                            //2.1.2 uncle=red
+                            else{
+                                //set parent and uncel to black
+                                TreeNode::set_black(parent.clone());
+                                let unwraped_uncle=uncle.clone().unwrap();
+                                TreeNode::set_black(unwraped_uncle.clone());
+                                //set grand to red and recolor
+                                TreeNode::set_red(grand_parent.clone());
+                                insert_recolor(grand_parent.clone());
+                            }
+                        }
+                        //2.2 LL
+                        else if node_dir==Direction::Left&&parent_dir==Direction::Left{
+                            //println!("LL");
+                            let uncle=grand_parent.borrow().right.clone();
+                            //2.2.1 uncle=none||black
+                            if !TreeNode::is_red(uncle.clone()){
+                                //grand parent node perform right rotation
+                                rotate(&Some(grand_parent.clone()),&Some(parent.clone()));
+                                //recolor parent to black and right sibling to red                                
+                                let parent=node.borrow().parent.clone().unwrap();
+                                TreeNode::set_black(parent.clone());
+                                let right_sibling=parent.borrow().right.clone().unwrap();                                
+                                TreeNode::set_red(right_sibling.clone());
+                            }
+                            //2.2.2 uncle=red
+                            else{
+                                //set parent and uncel to black
+                                TreeNode::set_black(parent.clone());
+                                let unwraped_uncle=uncle.clone().unwrap();
+                                TreeNode::set_black(unwraped_uncle.clone());
+                                //set grand to red and recolor
+                                TreeNode::set_red(grand_parent.clone());
+                                insert_recolor(grand_parent.clone());
+                            }
+                        }
+                        //2.3 LR
+                        else if parent_dir==Direction::Left&&node_dir==Direction::Right{
+                            //println!("LR");
+                            let uncle=grand_parent.borrow().right.clone();
+                            //2.3.1 uncle=none||black
+                            if !TreeNode::is_red(uncle.clone()){
+                                //left rotate parent to change LR condition into LL
+                                rotate(&Some(parent.clone()),&Some(node.clone()));
+                                //now node is the parent and we take the original parent, which is the left child now as a new inserted node
+                                let left_child=node.borrow().left.clone().unwrap();
+                                insert_recolor(left_child.clone());
+                            }
+                            //2.3.2 uncle=red
+                            else{
+                                //set parent and uncel to black
+                                TreeNode::set_black(parent.clone());
+                                let unwraped_uncle=uncle.clone().unwrap();
+                                TreeNode::set_black(unwraped_uncle.clone());
+                                //set grand to red and recolor
+                                TreeNode::set_red(grand_parent.clone());
+                                insert_recolor(grand_parent.clone());
+                            }
+                        }
+                        //2.4 RL
+                        else if parent_dir==Direction::Right&&node_dir==Direction::Left{
+                            //println!("RL");
+                            let uncle=grand_parent.borrow().left.clone();
+                            //2.4.1 uncle=none||black
+                            if !TreeNode::is_red(uncle.clone()){
+                                //right rotate parent to change LR condition into LL
+                                rotate(&Some(parent.clone()),&Some(node.clone()));
+                                //now node is the parent and we take the original parent, which is the right child now as a new inserted node
+                                let right_child=node.borrow().right.clone().unwrap();
+                                insert_recolor(right_child.clone());
+                            }
+                            //2.4.2 uncle=red
+                            else{
+                                //set parent and uncel to black
+                                TreeNode::set_black(parent.clone());
+                                let unwraped_uncle=uncle.clone().unwrap();
+                                TreeNode::set_black(unwraped_uncle.clone());
+                                //set grand to red and recolor
+                                TreeNode::set_red(grand_parent.clone());
+                                insert_recolor(grand_parent.clone());
+                            }
+                        } 
+                    }
+                    None => {
+                        //2.5 parent is root, set parent to black
+                        TreeNode::set_black(parent);
+                    }
+                }
+            }
+        },
+        //3. node is root
+        None => {
+            TreeNode::set_black(node);
+        },
+    }
+}
 
 fn delete_node<T: Ord+Copy+Debug+Display>(
     root: TreeRoot<T>, value: T)->Option<TreeRoot<T>>{
@@ -534,6 +763,8 @@ fn delete_rebalance_helper<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>)->Option
 
 #[cfg(test)]
 mod test{
+    use crate::tree;
+
     use super::*;
     fn new_children(nd: &TreeRoot<i32>, lv:i32, rv:i32,lc: &str, rc:&str)-> (TreeRoot<i32>, TreeRoot<i32>){
         let f = |s|if s == "r" {NodeColor::Red} else {NodeColor::Black};
@@ -560,6 +791,153 @@ mod test{
         }
         assert!(vec.iter().zip(&mut pre_delete_vec.iter()).filter(|&(a, b)| a != b).count()==0);
     }
+    fn check_valid_insert(tree: &RedBlackTree<i32>, value: i32, pre_insert_vec: &mut Vec<i32>){
+        let mut vec = tree.in_order_traverse();
+        assert!(tree.check_valid());
+        assert!(vec.len()==pre_insert_vec.len()+1);
+        vec.retain(|&x| x != value);
+        assert!(vec.iter().zip(&mut pre_insert_vec.iter()).filter(|&(a, b)| a != b).count()==0);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(12);
+        tree.insert(1);
+        tree.insert(9);
+        tree.insert(2);
+        tree.insert(0);
+        tree.insert(11);
+        tree.insert(7);
+        tree.insert(19);
+        tree.insert(4);
+        tree.insert(15);
+        tree.insert(18);
+        tree.insert(5);
+        tree.insert(14);
+        tree.insert(13);
+        tree.insert(10);
+        tree.insert(16);
+        tree.insert(6);
+        tree.insert(3);
+        tree.insert(8);
+        tree.insert(17);
+        assert!(tree.check_valid());
+    }
+    #[test]
+    fn test_insert_RR_uncle_red() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(1);
+        tree.insert(-1);
+        tree.insert(3);
+
+        let mut vec = tree.in_order_traverse();
+        tree.insert(4);
+        check_valid_insert(&tree, 4, &mut vec); 
+    }
+    #[test]
+    fn test_insert_RR_uncle_black() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(5);
+        tree.insert(4);
+        tree.insert(9);
+        tree.insert(7);
+        tree.insert(6);
+
+        let mut vec = tree.in_order_traverse();
+        tree.insert(10);
+        check_valid_insert(&tree, 10, &mut vec); 
+    }
+    #[test]
+    fn test_insert_LL_uncle_red() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(7);
+        tree.insert(4);
+        tree.insert(8);
+
+        let mut vec = tree.in_order_traverse();
+        tree.insert(3);
+        check_valid_insert(&tree, 3, &mut vec); 
+    }
+    #[test]
+    fn test_insert_LL_uncle_black() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(11);
+        tree.insert(12);
+        tree.insert(4);
+        tree.insert(2);
+        tree.insert(9);
+        tree.insert(1);
+        tree.insert(10);
+
+        let mut vec = tree.in_order_traverse();
+        tree.insert(0);
+        check_valid_insert(&tree, 0, &mut vec); 
+    }
+    #[test]
+    fn test_insert_LR_uncle_red() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(1);
+        tree.insert(2);
+        tree.insert(5);
+         
+        let mut vec = tree.in_order_traverse();
+        tree.insert(3);
+        check_valid_insert(&tree, 3, &mut vec); 
+        
+    }
+
+    #[test]
+    fn test_insert_LR_uncle_blalck() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(4);
+        tree.insert(2);
+        tree.insert(1);
+        tree.insert(10);
+        tree.insert(8);
+        tree.insert(11);
+         
+        let mut vec = tree.in_order_traverse();
+        tree.insert(9);
+        check_valid_insert(&tree, 9, &mut vec);         
+    }
+
+    #[test]
+    fn test_insert_RL_uncle_red() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(2);
+        tree.insert(1);
+        tree.insert(4);
+        tree.insert(3);
+        tree.insert(7);
+        tree.insert(5);
+        tree.insert(9);
+        
+        let mut vec = tree.in_order_traverse();
+        tree.insert(8);
+        check_valid_insert(&tree, 8, &mut vec);   
+    }
+
+    #[test]
+    fn test_insert_RL_uncle_black() {
+        let mut tree = RedBlackTree::new();
+        tree.insert(2);
+        tree.insert(1);
+        tree.insert(4);
+        tree.insert(3);
+        tree.insert(8);
+        tree.insert(6);
+        tree.insert(5);
+        tree.insert(7);
+        tree.insert(10);
+        
+        let mut vec = tree.in_order_traverse();
+        tree.insert(9);
+        check_valid_insert(&tree, 9, &mut vec);   
+    }
+
+    
+
 
     #[test]
     fn test_delete1(){

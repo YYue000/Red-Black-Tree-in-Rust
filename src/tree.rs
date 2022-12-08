@@ -9,6 +9,7 @@ use std::cmp::max;
 use std::fmt::{Debug, Display};
 
 /// Enum of direction for binary trees
+#[derive(Clone, Debug, PartialEq)]
 pub enum Direction{
     Left,
     Right

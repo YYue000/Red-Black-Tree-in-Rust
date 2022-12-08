@@ -1,0 +1,29 @@
+Avl benchmark insert test with size 10000
+time:   [7.1135 ms 7.1910 ms 7.2790 ms]
+
+Avl benchmark search test with size 10000
+time:   [66.289 µs 67.303 µs 68.497 µs]
+
+Avl benchmark insert test with size 40000
+time:   [34.765 ms 35.840 ms 36.987 ms]
+
+Avl benchmark search test with size 40000
+time:   [403.10 µs 412.57 µs 422.51 µs]
+
+Avl benchmark insert test with size 70000
+time:   [60.254 ms 61.588 ms 63.033 ms]
+
+Avl benchmark search test with size 70000
+time:   [481.97 µs 504.63 µs 543.10 µs]
+
+Avl benchmark insert test with size 100000
+[87.252 ms 88.599 ms 90.038 ms]
+
+Avl benchmark search test with size 100000
+time:   [829.56 µs 902.45 µs 999.96 µs]
+
+Avl benchmark insert test with size 130000
+time:   [110.99 ms 112.38 ms 113.97 ms]
+
+Avl benchmark search test with size 130000
+time:   [911.26 µs 932.77 µs 955.61 µs]
