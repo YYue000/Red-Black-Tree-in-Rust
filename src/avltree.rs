@@ -18,6 +18,7 @@ struct TreeNode<T: Ord+Copy+Debug+Display>{
 
 type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct AVLTree<T: Ord+Copy+Debug+Display> {
     root: TreeRoot<T>
 }
