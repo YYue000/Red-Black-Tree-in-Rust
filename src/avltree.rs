@@ -31,33 +31,20 @@ pub struct AVLTree<T: Ord+Copy+Debug+Display> {
 }
 
 impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for AVLTree<T>{
+    fn insert(&mut self, value: T)->bool{
+        AVLTree::<T>::insert(self, value)
+    }
+    fn delete(&mut self, value: T)->Option<T>{
+        AVLTree::<T>::delete(self, value)
+    }
     fn root(&self)->TreeRoot<T>{
         self.root.clone()
     }
-
-    /// Check whether the AVL tree is valid
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use BinaryTress::avltree::AVLTree;
-    /// let mut avltree: AVLTree<u32> = AVLTree::new();
-    /// avltree.insert(8);
-    /// println!("{}", avltree.check_valid());
-    /// ```
+    fn search(&self, value: T)->bool{
+        AVLTree::<T>::search(self, value)
+    }
     fn check_valid(&self)->bool{
-        if self.root.is_none(){
-            return true;
-        }
-        let vec = self.in_order_traverse();
-        let order = vec.iter().zip(vec.iter().skip(1))
-            .all(|(current, next)| current<next);
-        if !order{
-            println!("Order error");
-            return false;
-        }
-
-        self.root.clone().unwrap().borrow().is_balanced()
+        AVLTree::<T>::check_valid(self)
     }
 }
 
@@ -165,8 +152,34 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
         }
 
         return true;
-
     }
+
+    /// Check whether the AVL tree is valid
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// avltree.insert(8);
+    /// println!("{}", avltree.check_valid());
+    /// ```
+    pub fn check_valid(&self)->bool{
+        if self.root.is_none(){
+            return true;
+        }
+        let vec = self.in_order_traverse();
+        let order = vec.iter().zip(vec.iter().skip(1))
+            .all(|(current, next)| current<next);
+        if !order{
+            println!("Order error");
+            return false;
+        }
+
+        let balance = self.root.clone().unwrap().borrow().is_balanced();
+        return balance;
+    }
+
 
     /// Search a node in the Tree
     ///
@@ -207,7 +220,7 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
     /// avltree.insert(8);
     /// println!("{}", avltree.is_empty());
     /// ```
-    fn is_empty(&self)->bool{
+    pub fn is_empty(&self)->bool{
         TreeTrait::<T, TreeNode<T>>::is_empty(self)
     }
     /// Count number of leaves in the AVLTree
@@ -220,7 +233,7 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
     /// avltree.insert(8);
     /// println!("{}", avltree.count_leaves());
     /// ```
-    fn count_leaves(&self)->u32{
+    pub fn count_leaves(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::count_leaves(self)
     }
     /// Print the information of the tree
@@ -237,7 +250,7 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
     /// avltree.insert(8);
     /// println!("{}", avltree.print(true));
     /// ```
-    fn print(&self, verbose: bool){
+    pub fn print(&self, verbose: bool){
         TreeTrait::<T, TreeNode<T>>::print(self, verbose)
     }
     /// In-order traverse of the tree
@@ -253,7 +266,7 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
     /// avltree.insert(10);
     /// println!("{}", avltree.in_order_traverse());
     /// ```
-    fn in_order_traverse(&self)->Vec<T>{
+    pub fn in_order_traverse(&self)->Vec<T>{
         TreeTrait::<T, TreeNode<T>>::in_order_traverse(self)
     }
 }

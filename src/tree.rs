@@ -66,8 +66,11 @@ pub trait SimpleTreeTrait<T: Ord+Copy+Debug+Display>{
 /// Trait for the binary trees
 ///
 /// Should implement SimpleTreeTrait
+//pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>{
 pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: SimpleTreeTrait<T>{
-    
+    fn insert(&mut self, value: T)->bool;
+    fn delete(&mut self, value: T)->Option<T>;
+   
     /// Get the root of the tree
     fn root(&self)->Option<Rc<RefCell<TreeNode>>>;
 
@@ -121,6 +124,9 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
 
     /// Check whether the tree is valid
     fn check_valid(&self)->bool;
+
+    /// Search a value
+    fn search(&self, value: T)->bool;
 
     // assocated constants
     /// An associated value for count_leaves
@@ -190,16 +196,17 @@ pub trait TreeNodeTrait<T: Ord+Copy+Debug+Display>{
             Some(parent)=>{
                 let direction = self.get_direction_to_parent();
                 match direction{
-                    Direction::Left=>parent.borrow_mut().set_left(self.left()),
-                    Direction::Right=>parent.borrow_mut().set_right(self.right())
+                    Direction::Left=>parent.borrow_mut().set_left(child.clone()),
+                    Direction::Right=>parent.borrow_mut().set_right(child.clone())
                 };
                 None
             },
-            None=>Some(child)
+            None=>Some(child.clone())
         };
         self.set_parent(None);
         self.set_left(None);
         self.set_right(None);
+
         return ret;
     }
 

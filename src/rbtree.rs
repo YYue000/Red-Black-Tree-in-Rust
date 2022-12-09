@@ -34,46 +34,23 @@ pub struct RedBlackTree<T: Ord+Copy+Debug+Display>{
 
 
 impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
+    fn insert(&mut self, value: T)->bool{
+        RedBlackTree::<T>::insert(self, value)
+    }
+    fn delete(&mut self, value: T)->Option<T>{
+        RedBlackTree::<T>::delete(self, value)
+    }
+
     fn root(&self)->TreeRoot<T>{
         self.root.clone()
     }
 
-    /// Check whether the red black tree is valid
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use BinaryTress::rbtree::RedBlackTree;
-    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
-    /// rbtree.insert(8);
-    /// println!("{}", rbtree.check_valid());
-    /// ```
     fn check_valid(&self)->bool{
-        if self.root.is_none(){
-            return true;
-        }
+        RedBlackTree::<T>::check_valid(self)
+    }
 
-        let root_nd = self.root.clone().unwrap();
-        if root_nd.borrow().color != NodeColor::Black{
-            println!("Root node should be black");
-            return false;
-        }
-        let vec = self.in_order_traverse();
-        let order = vec.iter().zip(vec.iter().skip(1))
-            .all(|(current, next)| current<next);
-        if !order{
-            println!("Order error");
-            return false;
-        }
-        if !root_nd.borrow().check_red_children(){
-            println!("Red node doesn't have two black children");
-            return false;
-        }
-        if !self.check_color(){
-            println!("Black nodes in the paths don't agree");
-            return false;
-        }
-        return true;
+    fn search(&self, value: T)->bool{
+        RedBlackTree::<T>::search(self, value)
     }
 
     /// Helper for count_leaves()
@@ -197,6 +174,44 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     pub fn search(&self, value: T)->bool{
         search_node(self.root(), value).is_some()
     }
+
+    /// Check whether the red black tree is valid
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// rbtree.insert(8);
+    /// println!("{}", rbtree.check_valid());
+    /// ```
+    pub fn check_valid(&self)->bool{
+        if self.root.is_none(){
+            return true;
+        }
+        let root_nd = self.root.clone().unwrap();
+        if root_nd.borrow().color != NodeColor::Black{
+            println!("Root node should be black");
+            return false;
+        }
+        let vec = self.in_order_traverse();
+        let order = vec.iter().zip(vec.iter().skip(1))
+            .all(|(current, next)| current<next);
+        if !order{
+            println!("Order error");
+            return false;
+        }
+        if !root_nd.borrow().check_red_children(){
+            println!("Red node doesn't have two black children");
+            return false;
+        }
+        if !self.check_color(){
+            println!("Black nodes in the paths don't agree");
+            return false;
+        }
+        return true;
+    }
+
     // repeating
     /// Check if the RedBlackTree is empty
     ///
@@ -208,7 +223,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// rbtree.insert(8);
     /// println!("{}", rbtree.is_empty());
     /// ```
-    fn is_empty(&self)->bool{
+    pub fn is_empty(&self)->bool{
         TreeTrait::<T, TreeNode<T>>::is_empty(self)
     }
 
@@ -222,7 +237,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// rbtree.insert(8);
     /// println!("{}", rbtree.count_leaves());
     /// ```
-    fn count_leaves(&self)->u32{
+    pub fn count_leaves(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::count_leaves(self)
     }
     /// Print the information of the tree
@@ -239,7 +254,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// rbtree.insert(8);
     /// println!("{}", rbtree.print(true));
     /// ```
-    fn print(&self, verbose: bool){
+    pub fn print(&self, verbose: bool){
         TreeTrait::<T, TreeNode<T>>::print(self, verbose)
     }
 
@@ -253,7 +268,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// rbtree.insert(8);
     /// println!("{}", rbtree.height());
     /// ```
-    fn height(&self)->u32{
+    pub fn height(&self)->u32{
         TreeTrait::<T, TreeNode<T>>::height(self)
     }
     /// In-order traverse of the tree
@@ -269,7 +284,7 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
     /// rbtree.insert(10);
     /// println!("{}", rbtree.in_order_traverse());
     /// ```
-    fn in_order_traverse(&self)->Vec<T>{
+    pub fn in_order_traverse(&self)->Vec<T>{
         TreeTrait::<T, TreeNode<T>>::in_order_traverse(self)
     }
 }
@@ -439,7 +454,6 @@ impl<T: Ord+Copy+Debug+Display> TreeNode <T>{
 
 }
 fn insert_node<T: Ord+Copy+Debug+Display>(node:Rc<RefCell<TreeNode<T>>>, value: T) -> (TreeRoot<T>,bool){
-    //println!("insert {:?}",value);
     if node.borrow().value ==value{
         return (Some(node),false);
     }else if node.borrow().value >value{
@@ -616,8 +630,7 @@ fn delete_node<T: Ord+Copy+Debug+Display>(
         node.borrow_mut().value = right_min;
         return r;
     }
-    // else: no child; one child
-    
+    // else: no child; one child 
 
     // Case0.2: No child
     // red=>just delete it
@@ -639,7 +652,7 @@ fn delete_node<T: Ord+Copy+Debug+Display>(
     if child.is_some(){
         if child.clone().unwrap().borrow().color == NodeColor::Red{
             child.clone().unwrap().borrow_mut().color = NodeColor::Black;
-            let ret = node.borrow_mut().delete_node();
+            let ret = node.borrow_mut().delete_node(); 
             return ret;
         }
         else{
@@ -682,6 +695,7 @@ fn delete_rebalance_helper<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>)->Option
         Direction::Right=>node.borrow().parent.clone().unwrap().borrow_mut().left.clone().unwrap(),
     };
     let sib_direction = direction.opposite();
+    //println!("Important!!! {:?} {:?}", sibling.borrow().color, sibling.borrow().value);
 
     if sibling.borrow().color==NodeColor::Red{
         sibling.borrow_mut().color = NodeColor::Black;
