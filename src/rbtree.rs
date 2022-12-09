@@ -52,16 +52,6 @@ impl<T: Ord+Copy+Debug+Display> TreeTrait<T, TreeNode<T>> for RedBlackTree<T>{
     fn search(&self, value: T)->bool{
         RedBlackTree::<T>::search(self, value)
     }
-
-    /// Helper for count_leaves()
-    fn DEFAULT_LEAF_NUM(&self)->u32{
-        2 as u32
-    }
-    /// Helper for height()
-    fn DEFAULT_HEIGHT_NUM(&self)->u32{
-        1 as u32
-    }
-
 }
 
 impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
@@ -72,7 +62,7 @@ impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
         RedBlackTree::<T>::delete(self, value)
     }
     fn count_leaves(&self)->u32{
-        RedBlackTree::<T>::count_leaves(self)
+        RedBlackTree::<T>::count_leaves(self) * 2
     }
     fn is_empty(&self)->bool{
         RedBlackTree::<T>::is_empty(self)
@@ -81,7 +71,7 @@ impl<T: Ord+Copy+Debug+Display> SimpleTreeTrait<T> for RedBlackTree<T>{
         RedBlackTree::<T>::print(self, verbose)
     }
     fn height(&self)->u32{
-        RedBlackTree::<T>::height(self)
+        RedBlackTree::<T>::height(self) + 1
     }
     fn in_order_traverse(&self)->Vec<T>{
         RedBlackTree::<T>::in_order_traverse(self)
@@ -150,7 +140,8 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         let mut res=false;
         self.root=match root {
             Some(root) => {
-                let (new_root,res)=insert_node(root,value);
+                let (new_root, r)=insert_node(root,value);
+                res = r;
                 new_root
             }
             None => {
