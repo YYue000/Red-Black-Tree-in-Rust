@@ -6,7 +6,8 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::fmt::{Debug, Display};
 
-pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait, rotate, search_node};
+pub use crate::tree::{TreeTrait, TreeNodeTrait, Direction, SimpleTreeTrait, rotate};
+use crate::tree::search_node;
 
 /// Color of the nodes in red black tree
 #[derive(Clone, Debug, PartialEq, Copy)]
@@ -26,6 +27,7 @@ struct TreeNode<T: Ord+Copy+Debug+Display> {
 type TreeRoot<T> = Option<Rc<RefCell<TreeNode<T>>>>;
 
 /// Struct of the red black tree
+#[derive(Clone, Debug)]
 pub struct RedBlackTree<T: Ord+Copy+Debug+Display>{
     root: TreeRoot<T>
 }
@@ -185,6 +187,16 @@ impl<T: Ord+Copy+Debug+Display> RedBlackTree <T>{
         res 
     }
 
+    /// Search a node in the Tree
+    ///
+    /// ```
+    /// use BinaryTress::rbtree::RedBlackTree;
+    /// let mut rbtree: RedBlackTree<u32> = RedBlackTree::new();
+    /// let is_contain = rbtree.search(8);
+    /// ```
+    pub fn search(&self, value: T)->bool{
+        search_node(self.root(), value).is_some()
+    }
     // repeating
     /// Check if the RedBlackTree is empty
     ///

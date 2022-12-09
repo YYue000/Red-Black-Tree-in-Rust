@@ -168,6 +168,16 @@ impl <T: Ord+Copy+Debug+Display> AVLTree<T>{
 
     }
 
+    /// Search a node in the Tree
+    ///
+    /// ```
+    /// use BinaryTress::avltree::AVLTree;
+    /// let mut avltree: AVLTree<u32> = AVLTree::new();
+    /// let is_contain = avltree.search(8);
+    /// ```
+    pub fn search(&self, value: T)->bool{
+        search_node(self.root(), value).is_some()
+    }
     /// Get height of the AVLTree
     ///
     /// # Example

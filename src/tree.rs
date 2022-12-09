@@ -119,17 +119,6 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
         return result;
     }
 
-    /// Search a node in the Tree
-    ///
-    /// ```
-    /// use BinaryTress::avltree::AVLTree;
-    /// let mut avltree: AVLTree<u32> = AVLTree::new();
-    /// let is_contain = avltree.search(8);
-    /// ```
-    fn search(&self, value: T)->bool{
-        search_node(self.root(), value).is_some()
-    }
-
     /// Check whether the tree is valid
     fn check_valid(&self)->bool;
 
@@ -486,7 +475,7 @@ pub fn rotate<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(parent: &Option<Rc
 }
 
 /// Helper for Tree.search()
-pub fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
+pub (crate) fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
     Option<Option<Rc<RefCell<N>>>>{
     if root.is_none(){
         return None;
@@ -522,7 +511,7 @@ pub fn search_node<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<
 }
 
 /// Helper for Tree.insert()
-pub fn search_insert_point<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
+pub (crate) fn search_insert_point<T: Ord+Copy+Debug+Display, N: TreeNodeTrait<T>>(root: Option<Rc<RefCell<N>>>, value: T)->
     Option<Rc<RefCell<N>>>{
     if root.is_none(){
         return None;
