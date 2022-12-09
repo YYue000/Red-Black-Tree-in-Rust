@@ -79,7 +79,7 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
         if self.root().is_some(){
             return self.root().unwrap().borrow().count_leaves();
         }
-        return self.DEFAULT_LEAF_NUM();
+        return 0;
     }
     /// Check whether the tree is empty
     fn is_empty(&self)->bool{
@@ -105,7 +105,7 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
     /// Get height of the AVLTree
     fn height(&self)->u32{
         match self.root(){
-            None => self.DEFAULT_HEIGHT_NUM(),
+            None => 0,
             Some(node) => node.borrow().get_height(),
         }
     }
@@ -128,20 +128,8 @@ pub trait TreeTrait<T: Ord+Copy+Debug+Display, TreeNode: TreeNodeTrait<T>>: Simp
     /// Search a value
     fn search(&self, value: T)->bool;
 
-    // assocated constants
-    /// An associated value for count_leaves
-    ///
-    /// 0 for default and 2 for NIL nodes
-    fn DEFAULT_LEAF_NUM(&self)->u32{
-        0 as u32
-    }
 
-    /// An associated value for height
-    ///
-    /// 0 for default and 1 for NIL nodes
-    fn DEFAULT_HEIGHT_NUM(&self)->u32{
-        0 as u32
-    }
+
 }
 
 /// Trait for the tree nodes
