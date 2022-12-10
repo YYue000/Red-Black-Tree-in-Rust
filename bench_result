@@ -9,6 +9,11 @@ time:   [689.87 µs 706.99 µs 724.77 µs] without 1/10 sample
 RedBlack Tree benchmark search test with size 10000
 time:   [149.64 µs 153.21 µs 157.81 µs]
 time:   [1.8173 ms 1.8562 ms 1.9027 ms] without 1/10 sample
+
+Avl benchmark delete test with size 10000 /5
+time:   [138.36 µs 143.71 µs 153.24 µs]
+RedBlack Tree benchmark delete test with size 10000 /5
+time:   [22.399 µs 22.481 µs 22.582 µs]
 -------------------------------------------------------
 Avl benchmark insert test with size 40000
 time:   [32.058 ms 32.572 ms 33.276 ms]
@@ -21,6 +26,11 @@ time:   [3.7088 ms 3.7452 ms 3.7929 ms] without 1/10 sample
 RedBlack Tree benchmark search test with size 40000
 time:   [690.00 µs 695.13 µs 700.77 µs]
 time:   [8.4051 ms 8.5289 ms 8.7347 ms] without 1/10 sample
+
+Avl benchmark delete test with size 40000 /5
+time:   [895.60 µs 941.55 µs 993.55 µs]
+RedBlack Tree benchmark delete test with size 40000 /5
+time:   [100.40 µs 103.46 µs 106.85 µs]
 -------------------------------------------------------
 Avl benchmark insert test with size 70000
 time:   [56.495 ms 56.776 ms 57.113 ms]
@@ -33,6 +43,11 @@ time:   [5.1625 ms 5.3094 ms 5.4688 ms] without 1/10 sample
 RedBlack Tree benchmark search test with size 70000
 time:   [1.2691 ms 1.2741 ms 1.2797 ms]
 time:   [18.736 ms 19.235 ms 19.757 ms] without 1/10 sample
+
+Avl benchmark delete test with size 70000 /5
+time:   [1.0871 ms 1.1245 ms 1.1648 ms]
+RedBlack Tree benchmark delete test with size 70000 /5
+time:   [188.64 µs 199.62 µs 213.04 µs]
 -------------------------------------------------------
 Avl benchmark insert test with size 100000
 time:   [84.262 ms 85.309 ms 86.595 ms]
@@ -45,6 +60,11 @@ time:   [7.7414 ms 7.7989 ms 7.8685 ms] without 1/10 sample
 RedBlack Tree benchmark search test with size 100000
 time:   [2.0223 ms 2.0350 ms 2.0493 ms]
 time:   [22.990 ms 23.290 ms 23.695 ms] without 1/10 sample
+
+Avl benchmark delete test with size 100000 /5
+time:   [1.8261 ms 1.9101 ms 2.0046 ms]
+RedBlack Tree benchmark delete test with size 100000 /5
+time:   [272.19 µs 284.45 µs 298.06 µs]
 -------------------------------------------------------
 Avl benchmark insert test with size 130000
 time:   [116.14 ms 118.00 ms 119.99 ms]
@@ -57,4 +77,10 @@ time:   [8.7523 ms 8.8655 ms 8.9964 ms] without 1/10 sample
 RedBlack Tree benchmark search test with size 130000
 time:   [2.7337 ms 2.7564 ms 2.7811 ms]
 time:   [36.915 ms 39.696 ms 43.291 ms] without 1/10 sample
+
+Avl benchmark delete test with size 130000 /5
+time:   [2.1326 ms 2.2816 ms 2.4426 ms]
+RedBlack Tree benchmark delete test with size 130000 /5
+time:   [350.61 µs 367.56 µs 387.05 µs]
+
 
