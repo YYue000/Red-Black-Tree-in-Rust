@@ -449,8 +449,11 @@ fn rebalance_helper<T: Ord+Copy+Debug+Display>(root: TreeRoot<T>)->Option<TreeRo
             right_left_rotate(&root.clone());
         }
     }
-    let ret = Some(node.borrow().parent.clone());
     let p = node.borrow().parent.clone();
+    let ret = match p.clone().unwrap().borrow().parent(){
+        None=>Some(p.clone()),
+        Some(_)=>None 
+    };
     let retp = rebalance_helper(p);
     if retp.is_none(){
         return ret;
