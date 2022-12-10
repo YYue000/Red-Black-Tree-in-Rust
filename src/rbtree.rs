@@ -617,7 +617,8 @@ fn delete_node<T: Ord+Copy+Debug+Display>(
     if node.borrow().left.is_some() && node.borrow().right.is_some(){
         let right_min = node.borrow().right.clone().unwrap().borrow().get_min();
         let rchild = node.borrow().right.clone();
-        let r = delete_node(rchild, right_min);
+        let new_root = search_node(rchild.clone(), right_min).unwrap();
+        let r = delete_node(new_root, right_min);
         node.borrow_mut().value = right_min;
         return r;
     }
